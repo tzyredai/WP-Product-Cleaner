@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP syntax
+        run: |
+          php -l wp-product-cleaner.php
+          php -l includes/class-admin.php
+          php -l includes/class-matcher.php
+          php -l views/dashboard.php
+          php -l uninstall.php
+      - name: JavaScript syntax
+        run: node --check assets/admin.js
+      - name: JavaScript regression tests
+        run: node developer-tests/core.test.js
+      - name: Matcher regression tests
+        run: php developer-tests/matching.test.php
+      - name: Build installable ZIP
+        run: bash scripts/build-zip.sh
+      - name: ZIP integrity
+        run: unzip -t dist/wp-product-cleaner-*.zip
